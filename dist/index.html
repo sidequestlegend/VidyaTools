@@ -35,7 +35,9 @@
                         await button.AddComponent(new BS.BanterMaterial("Unlit/Diffuse", "", color));
                         await button.AddComponent(new BS.BoxCollider());
                         const buttonText = new BS.GameObject(name + " text");
-                        const text = await buttonText.AddComponent(new BS.BanterText(type, new BS.Vector4(1,1,1,1) , 1, 0, 10));
+                        const text = await buttonText.AddComponent(new BS.BanterText(type, new BS.Vector4(1,1,1,1) , 1, 0, 15));
+                        const texttransform = await buttonText.AddComponent(new BS.Transform());
+                        texttransform.localPosition = new BS.Vector3(0,-0.2,0);
                         await buttonText.SetParent(button, false);
                         await button.SetLayer(5);
                         await button.SetParent(videoContainer, false);
@@ -78,7 +80,7 @@
                         playing.text = "Playing: " + e.detail;
                     });
 
-                    await makeButton("stop", new BS.Vector3(0, 0.6, 0), new BS.Vector4(1,1,0,0), "Stop", ()=>{
+                    await makeButton("stop", new BS.Vector3(0, 0.6, 0), new BS.Vector4(1,0,0,0), "Stop", ()=>{
                         player.Stop();
                     });
 
@@ -118,13 +120,17 @@
 
                     player.On("warning", w => console.log(w));
                     
+                    await makeButton("firstsong", new BS.Vector3(-1, -0.7, 0), new BS.Vector4(0.5,0.5,0.5,0), "OK", ()=>{
+                        player.Play("https://www.youtube.com/watch?v=VYOjWnS4cMY");
+                    });
 
+                    await makeButton("secondscong", new BS.Vector3(1, -0.7, 0), new BS.Vector4(0.5,0.5,0.5,0), "Not OK", ()=>{
+                        player.Play("https://www.youtube.com/watch?v=XWq1hK6XtjU");
+                    });
 
                     player.ActivatePlayer(player.NATIVE);
                     await player.Play("https://www.youtube.com/watch?v=VYOjWnS4cMY");
                     await player.SetVolume(0.05);
-                    // await new Promise(r=>setTimeout(r, 2000));
-                    // await player.Seek(210);
                    
                 });
             }
