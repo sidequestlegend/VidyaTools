@@ -35,8 +35,8 @@ export class NativePlayer extends BasePlayer{
         return false;
     }
     get isMuted(): boolean {
-        if(this.nativeAudio) {
-            return this.nativeAudio.mute;
+        if(this.nativePlayer) {
+            return this.nativePlayer.isMuted;
         }
         return false;
     }
@@ -60,10 +60,16 @@ export class NativePlayer extends BasePlayer{
         this.nativePlayer = await this.videoPlayer.AddComponent(new BS.BanterVideoPlayer());
         this.nativePlayer.WatchProperties([BS.PropertyName.time]);
         this.videoPlayer.On("object-update", async () => {
-            await this.nativePlayer.Q([BS.PropertyName.isPrepared, BS.PropertyName.isPlaying, BS.PropertyName.duration]);
-            console.log({time: this.nativePlayer.time, duration: this.nativePlayer.duration}, {detail: this.nativePlayer.isPlaying})
+            const muted = this.nativePlayer.isMuted;
+            const playing = this.nativePlayer.isPlaying;
+            await this.nativePlayer.Q([BS.PropertyName.isPrepared, BS.PropertyName.isMuted, BS.PropertyName.isPlaying, BS.PropertyName.duration]);
             this.dispatchEvent(new CustomEvent("time", {detail: {time: this.nativePlayer.time, duration: this.nativePlayer.duration}}));
-            this.dispatchEvent(new CustomEvent("playing", {detail: this.nativePlayer.isPlaying}));
+            if(playing != this.nativePlayer.isPlaying) {
+                this.dispatchEvent(new CustomEvent("playing", {detail: this.nativePlayer.isPlaying}));
+            }
+            if(muted != this.nativePlayer.isMuted) {
+                this.dispatchEvent(new CustomEvent("muted", {detail: this.nativePlayer.isMuted}));
+            }
         });
         this.dispatchEvent(new CustomEvent("playing", {detail: false}));
         this.dispatchEvent(new CustomEvent("muted", {detail: false}));
@@ -91,6 +97,7 @@ export class NativePlayer extends BasePlayer{
     }
     async GetSyncTime() {
         await this.nativePlayer.Q([BS.PropertyName.time]);
+        console.log(this.nativePlayer.time);
         return this.nativePlayer.time;
     }
     async Seek(time: number) {
@@ -102,29 +109,34 @@ export class NativePlayer extends BasePlayer{
     async PlayToggle() {
         await this.WaitForPlayer();
         this.nativePlayer.PlayToggle();
+        await this.nativePlayer.scene.WaitForEndOfFrame();
         await this.nativePlayer.Q([BS.PropertyName.isPlaying]);
         this.dispatchEvent(new CustomEvent("playing", {detail: this.isPlaying}));
     }
     async Stop() {
         await this.WaitForPlayer();
         this.nativePlayer.Stop();
+        await this.nativePlayer.scene.WaitForEndOfFrame();
         await this.nativePlayer.Q([BS.PropertyName.isPlaying]);
         this.dispatchEvent(new CustomEvent("playing", {detail: this.isPlaying}));
     }
     async MuteToggle() {
         await this.WaitForPlayer();
         this.nativePlayer.MuteToggle();
-        await this.nativeAudio.Q([BS.PropertyName.mute]);
+        await this.nativePlayer.scene.WaitForEndOfFrame();
+        await this.nativePlayer.Q([BS.PropertyName.isMuted]);
         this.dispatchEvent(new CustomEvent("muted", {detail: this.isMuted}));
     }
     async SetVolume(volume: number) {
         await this.WaitForPlayer();
         this.nativePlayer.volume = volume;
+        this.dispatchEvent(new CustomEvent("volume", {detail: this.nativePlayer.volume}));
     }
     async LoopToggle() {
         await this.nativePlayer.Q([BS.PropertyName.isLooping]);
         await this.WaitForPlayer();
-        this.nativePlayer.loop = this.nativePlayer.isLooping = !this.nativePlayer.isLooping;
+        this.nativePlayer.isLooping = !this.nativePlayer.isLooping;
+        this.dispatchEvent(new CustomEvent("looping", {detail: this.nativePlayer.isLooping}));
     }
     async Remove() {
         if(!this.videoPlayer) {

@@ -65,19 +65,20 @@ export class BrowserYoutubePlayer extends BrowserPlayer{
     async MuteToggle() {
         await this.SendOrRun("MuteToggle", [], async () => {
             await this.WaitFor(youtube, "isPlaying");
-            if(this.videoPlayer.isMuted()) {
-                this.videoPlayer.unMute()
+            const muted = this.videoPlayer.isMuted();
+            if(muted) {
+                this.videoPlayer.unMute();
             }else{
-                this.videoPlayer.mute()
+                this.videoPlayer.mute();
             }
-            this.SendToSpace("muted", this.videoPlayer.isMuted());
+            this.SendToSpace("muted", !muted);
         });
     }
     async SetVolume(volume: number) {
         await this.SendOrRun("SetVolume", [volume], async () => {
             await this.WaitFor(youtube, "isPlaying");
             this.videoPlayer.setVolume(volume * 100);
-            this.SendToSpace("volume", this.videoPlayer.getVolume() / 100);
+            this.SendToSpace("volume", volume);
         });
     }
     async LoopToggle() {
@@ -118,9 +119,10 @@ export class BrowserYoutubePlayer extends BrowserPlayer{
                 onStateChange: event => {
                     if(event.data === YT.PlayerState.PLAYING) {
                         this.readyToPlay = true;
-                    }else if(this.readyToPlay && event.data !== YT.PlayerState.PLAYING) {
-                        this.videoPlayer.playVideo();
                     }
+                    // else if(this.readyToPlay && event.data !== YT.PlayerState.PLAYING) {
+                    //     this.videoPlayer.playVideo();
+                    // }
                     youtube.isPlaying = event.data === YT.PlayerState.PLAYING;
                     this.SendToSpace("playing", youtube.isPlaying);
                 },

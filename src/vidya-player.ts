@@ -24,15 +24,7 @@ export class VidyaPlayer  extends VideoEventTarget{
         this.HTML5 = new BrowserHTML5Player(this.videoContainer, isClientSide);
         this.players = [this.NATIVE, this.YOUTUBE, this.HTML5];
         this.players.forEach(p => {
-            p.On("time", e => {
-                this.dispatchEvent(new CustomEvent("time", {detail: e.detail}));
-            })
-            p.On("playing", e => {
-                this.dispatchEvent(new CustomEvent("playing", {detail: e.detail}));
-            })
-            p.On("muted", e => {
-                this.dispatchEvent(new CustomEvent("muted", {detail: e.detail}));
-            })
+            ["time", "playing", "muted", "volume"].forEach(d => p.On(d, e => this.dispatchEvent(new CustomEvent(d, {detail: e.detail}))));
         });
         this.SetupBrowserClient();
     }
@@ -58,20 +50,31 @@ export class VidyaPlayer  extends VideoEventTarget{
             });
         }
     }
+    
+    Clamp(val, min, max){ return Math.min(Math.max(val, min), max); }
     async PlayToggle(): Promise<void>{return this.currentPlayer.PlayToggle()}
     async MuteToggle(): Promise<void> {return this.currentPlayer.MuteToggle()}
     async LoopToggle(): Promise<void> {return this.currentPlayer.LoopToggle()}
     async Stop(): Promise<void>{return this.currentPlayer.Stop()}
-    async SetVolume(vol: number): Promise<void> {return this.currentPlayer.SetVolume(vol)}
-    async Seek(time: number): Promise<void> {return this.currentPlayer.Seek(time)}
+    async SetVolume(vol: number): Promise<void> {return this.currentPlayer.SetVolume(this.Clamp(vol, 0, 1))}
+    async Seek(time: number): Promise<void> {return this.currentPlayer.Seek(this.Clamp(time, 0, this.duration))}
     get isPlaying(): boolean {
         return this.currentPlayer.isPlaying;
     }
     get isLooping(): boolean {
         return this.currentPlayer.isLooping;
     }
+    get isMuted(): boolean {
+        return this.currentPlayer.isMuted;
+    }
     get time(): number {
         return this.currentPlayer.time;
+    }
+    get volume(): number {
+        return this.currentPlayer.volume;
+    }
+    get duration(): number {
+        return this.currentPlayer.duration;
     }
     FormatTime(time: number): string {
         if(!time) {
@@ -83,6 +86,9 @@ export class VidyaPlayer  extends VideoEventTarget{
         return ('0' + hours).slice(-2) + ":" + ('0' + minutes).slice(-2) + ":" + ('0' + seconds).slice(-2);
     }
     async ActivatePlayer(player: BasePlayer) {
+        if(this.currentPlayer === player) {
+            return;
+        }
         let time = 0, volume = 0.5, muted = false;
         if(this.currentPlayer) {
             time = await this.currentPlayer.GetSyncTime();
@@ -94,8 +100,9 @@ export class VidyaPlayer  extends VideoEventTarget{
         await this.SetCurrentPlayer();
         if((window as any).BS) {
             await this.Play(this.url);
-            await this.Seek(time);
+            await this.currentPlayer.WaitFor(this, "duration");
             await this.SetVolume(volume);
+            await this.Seek(time);
             if(muted) {
                 this.MuteToggle();
             }

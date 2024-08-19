@@ -71,8 +71,8 @@ export class BrowserHTML5Player extends BrowserPlayer{
     }
     async MuteToggle() {
         await this.SendOrRun("MuteToggle", [], async () => {
-            this.videoPlayer.mute = !this.videoPlayer.mute;
-            this.SendToSpace("muted", this.videoPlayer.mute);
+            this.videoPlayer.muted = !this.videoPlayer.muted;
+            this.SendToSpace("muted", this.videoPlayer.muted);
         });
     }
     async LoopToggle() {

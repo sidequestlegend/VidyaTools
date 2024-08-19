@@ -66,6 +66,7 @@ export class BrowserPlayer extends BasePlayer{
                         break;
                     case "looping":
                         this._isLooping = data.data;
+                        this.dispatchEvent(new CustomEvent("looping", {detail: this._isLooping}));
                         break;
                     case "muted":
                         this._isMuted = data.data;
@@ -77,6 +78,7 @@ export class BrowserPlayer extends BasePlayer{
                         break;
                     case "volume":
                         this._volume = data.data;
+                        this.dispatchEvent(new CustomEvent("volume", {detail: this._volume}));
                         break;
                     case "sync-time":
                         this.syncTimeResolve(data.data);
