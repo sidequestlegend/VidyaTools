@@ -1,0 +1,16 @@
+{
+  "name": "vidya",
+  "scripts": {
+    "dist": "webpack --config webpack.config.js",
+    "serve": "webpack serve --preserve-symlinks"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}
