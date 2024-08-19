@@ -1,0 +1,139 @@
+
+<html>
+    <head>
+        <script src="/bullshcript.js"></script>
+		<script>
+            if(!window.BS) {
+                const player = new VIDYA.VidyaPlayer(null, true);
+            }else{
+                // A sample usage:
+
+                const scene = BS.BanterScene.getInstance();
+                const videoContainer = new BS.GameObject("VideoContainer");
+
+                scene.On("unity-loaded", async() => {
+                    
+                    // a floor to stand on
+                    const floor = new BS.GameObject("floor");
+                    const floortransform = await floor.AddComponent(new BS.Transform());
+                    floortransform.localScale = new BS.Vector3(1000, 0.001, 1000);
+                    await floor.AddComponent(new BS.BanterGeometry(BS.GeometryType.BoxGeometry));
+                    await floor.AddComponent(new BS.BanterMaterial("Unlit/Diffuse", "", new BS.Vector4(0.1,0.5,1,1)));
+                    await floor.AddComponent(new BS.BoxCollider());
+
+                    // a parent object to put the video player in
+                    const transform = await videoContainer.AddComponent(new BS.Transform());
+                    transform.position = new BS.Vector3(0, 1.5, 1.5);
+                    transform.localScale = new BS.Vector3(2,2,2);
+
+                    const makeButton = async (name, pos, color, type, callback) => {
+                        const button = new BS.GameObject(name);
+                        const buttontransform = await button.AddComponent(new BS.Transform());
+                        buttontransform.localScale = new BS.Vector3(0.1, 0.1, 0.1);
+                        buttontransform.localPosition = pos;
+                        await button.AddComponent(new BS.BanterGeometry(BS.GeometryType.BoxGeometry));
+                        await button.AddComponent(new BS.BanterMaterial("Unlit/Diffuse", "", color));
+                        await button.AddComponent(new BS.BoxCollider());
+                        const buttonText = new BS.GameObject(name + " text");
+                        const text = await buttonText.AddComponent(new BS.BanterText(type, new BS.Vector4(1,1,1,1) , 1, 0, 10));
+                        await buttonText.SetParent(button, false);
+                        await button.SetLayer(5);
+                        await button.SetParent(videoContainer, false);
+                        button.On("click", callback);
+                        return text;
+                    }
+                    
+                    // A button to swap to youtube
+                    makeButton("youtube", new BS.Vector3(-1.3, -0.3, 0), new BS.Vector4(1,0,0,0), "Youtube\n", ()=>{
+                        player.ActivatePlayer(player.YOUTUBE);
+                    });
+
+                    // A button to swap to html5
+                    makeButton("html5", new BS.Vector3(-1.3, 0, 0), new BS.Vector4(0,0,1,0), "HTML5\n",  ()=>{
+                        player.ActivatePlayer(player.HTML5);
+                    });
+
+                     // A button to swap to native
+                    makeButton("native", new BS.Vector3(-1.3, 0.3, 0), new BS.Vector4(0,1,0,0), "Native\n",  ()=>{
+                        player.ActivatePlayer(player.NATIVE);
+                    });
+                    
+                    const makeText = async(name, defaultVal, pos)=>{
+                        const timeText = new BS.GameObject(name + " text");
+                        const time = await timeText.AddComponent(new BS.BanterText(defaultVal, new BS.Vector4(1,1,1,1) , 1, 0, 1));
+                        await timeText.SetParent(videoContainer, false);
+                        const timeTexttransform = await timeText.AddComponent(new BS.Transform());
+                        timeTexttransform.localPosition = pos;
+                        return time;
+                    };
+
+                    
+                    // The actual video player code
+                    const player = new VIDYA.VidyaPlayer(videoContainer);
+
+                    const playing = await makeButton("playing", new BS.Vector3(-0.7, 0.6, 0), new BS.Vector4(1,1,0,0), "Playing: ...", ()=>{
+                        player.PlayToggle();
+                    });
+                    player.On("playing", e => {
+                        playing.text = "Playing: " + e.detail;
+                    });
+
+                    await makeButton("stop", new BS.Vector3(0, 0.6, 0), new BS.Vector4(1,1,0,0), "Stop", ()=>{
+                        player.Stop();
+                    });
+
+                    const time = await makeText("time", "00:00:00 / 00:00:00", new BS.Vector3(0, -3, 0));
+                    player.On("time", e => {
+                        time.text = player.FormatTime(e.detail.time) + " / " + player.FormatTime(e.detail.duration);
+                    });
+
+                    // const muted = await makeText("muted", "Muted: ...", new BS.Vector3(0, -1.7, 0));
+                    const muted = await makeButton("playing", new BS.Vector3(0.7, 0.6, 0), new BS.Vector4(1,0,1,0), "Muted: ...", ()=>{
+                        player.MuteToggle();
+                    });
+                    player.On("muted", e => {
+                        muted.text = "Muted: " + e.detail;
+                    });
+                    // const muted = await makeText("muted", "Muted: ...", new BS.Vector3(0, -1.7, 0));
+                    const volume = await makeButton("volumedown", new BS.Vector3(1.3, -0.2, 0), new BS.Vector4(0,1,1,0), "Volume: ...", ()=>{
+                        player.SetVolume(player.volume - 0.1);
+                    });
+
+                    await makeButton("volumeup", new BS.Vector3(1.3, 0.2, 0), new BS.Vector4(0,1,1,0), "", ()=>{
+                        player.SetVolume(player.volume + 0.1);
+                    });
+                    player.On("volume", e => {
+                        volume.text = "Volume: " + Math.round(e.detail*100);
+                    });
+
+
+                    await makeButton("seekbackwards", new BS.Vector3(-0.7, -0.6, 0), new BS.Vector4(0.5,0.5,1,0), "", ()=>{
+                        player.Seek(player.time - 5);
+                    });
+
+
+                    await makeButton("seekforward", new BS.Vector3(0.7, -0.6, 0), new BS.Vector4(0.5,0.5,1,0), "", ()=>{
+                        player.Seek(player.time + 5);
+                    });
+
+                    player.On("warning", w => console.log(w));
+                    
+
+
+                    player.ActivatePlayer(player.NATIVE);
+                    await player.Play("https://www.youtube.com/watch?v=VYOjWnS4cMY");
+                    await player.SetVolume(0.05);
+                    // await new Promise(r=>setTimeout(r, 2000));
+                    // await player.Seek(210);
+                   
+                });
+            }
+		</script>
+        <style>
+            html, body{margin: 0; padding: 0;background: black; height: 100%}
+            video {width: 100%; height: 100%;}
+        </style>
+    </head>
+    <body>
+    </body>
+</html>
