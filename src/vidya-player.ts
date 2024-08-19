@@ -51,13 +51,12 @@ export class VidyaPlayer  extends VideoEventTarget{
         }
     }
     
-    Clamp(val, min, max){ return Math.min(Math.max(val, min), max); }
     async PlayToggle(): Promise<void>{return this.currentPlayer.PlayToggle()}
     async MuteToggle(): Promise<void> {return this.currentPlayer.MuteToggle()}
     async LoopToggle(): Promise<void> {return this.currentPlayer.LoopToggle()}
     async Stop(): Promise<void>{return this.currentPlayer.Stop()}
-    async SetVolume(vol: number): Promise<void> {return this.currentPlayer.SetVolume(this.Clamp(vol, 0, 1))}
-    async Seek(time: number): Promise<void> {return this.currentPlayer.Seek(this.Clamp(time, 0, this.duration))}
+    async SetVolume(vol: number): Promise<void> {return this.currentPlayer.SetVolume(this.currentPlayer.Clamp(vol, 0, 1))}
+    async Seek(time: number): Promise<void> {return this.currentPlayer.Seek(time)}
     get isPlaying(): boolean {
         return this.currentPlayer.isPlaying;
     }
@@ -100,9 +99,11 @@ export class VidyaPlayer  extends VideoEventTarget{
         await this.SetCurrentPlayer();
         if((window as any).BS) {
             await this.Play(this.url);
-            await this.currentPlayer.WaitFor(this, "duration");
-            await this.SetVolume(volume);
+            if(!this.duration) {
+                await this.currentPlayer.WaitFor(this, "duration");
+            }
             await this.Seek(time);
+            await this.SetVolume(volume);
             if(muted) {
                 this.MuteToggle();
             }

@@ -97,13 +97,13 @@ export class NativePlayer extends BasePlayer{
     }
     async GetSyncTime() {
         await this.nativePlayer.Q([BS.PropertyName.time]);
-        console.log(this.nativePlayer.time);
         return this.nativePlayer.time;
     }
     async Seek(time: number) {
         await this.EnsurePrepared();
         await this.WaitForPlayer();
-        this.nativePlayer.time = time;
+        await this.nativePlayer.Q([BS.PropertyName.duration]);
+        this.nativePlayer.time = this.Clamp(time, 0, this.nativePlayer.duration);
         await this.nativePlayer.Q([BS.PropertyName.time]);
     }
     async PlayToggle() {

@@ -46,7 +46,7 @@ export class BrowserHTML5Player extends BrowserPlayer{
 
     async Seek(time: number) {
         await this.SendOrRun("Seek", [time], async () => {
-            this.videoPlayer.currentTime = time;
+            this.videoPlayer.currentTime = this.Clamp(time, 0, this.videoPlayer.duration);
             this.SendToSpace("time", this.videoPlayer.currentTime);
             this.SendToSpace("duration", this.videoPlayer.duration);
         });

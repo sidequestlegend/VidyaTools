@@ -24,6 +24,7 @@ export class BasePlayer extends VideoEventTarget{
     async Stop(): Promise<void>{}
     async SetVolume(vol: number): Promise<void> {}
     async Seek(time: number): Promise<void> {}
+    Clamp(val, min, max){ return Math.min(Math.max(val, min), max); }
     async WaitFor(parent, property, callback?, runBetween?, timeout = 100): Promise<void> {
         if(parent[property]) {
             if(callback) {

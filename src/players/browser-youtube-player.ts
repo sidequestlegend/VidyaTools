@@ -38,9 +38,10 @@ export class BrowserYoutubePlayer extends BrowserPlayer{
     }
 
     async Seek(time: number) {
+        console.log("setting yt time: ", time);
         await this.SendOrRun("Seek", [time], async () => {
             await this.WaitFor(youtube, "isPlaying");
-            this.videoPlayer.seekTo(time);
+            this.videoPlayer.seekTo(this.Clamp(time, 0, this.videoPlayer.getDuration()));
             this.SendToSpace("time", this.videoPlayer.getCurrentTime());
             this.SendToSpace("duration", this.videoPlayer.getDuration());
         });
