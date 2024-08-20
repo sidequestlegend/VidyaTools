@@ -16,6 +16,9 @@ export class NativePlayer extends BasePlayer{
         }
         return 0;
     }
+    set duration(value: number) {
+        this.nativePlayer.duration = value;
+    }
     get volume(): number {
         if(this.nativePlayer) {
             return this.nativePlayer.volume;
@@ -73,6 +76,7 @@ export class NativePlayer extends BasePlayer{
         });
         this.dispatchEvent(new CustomEvent("playing", {detail: false}));
         this.dispatchEvent(new CustomEvent("muted", {detail: false}));
+
         // const nativeAudioPlayer = new BS.GameObject("NativeAudioPlayer");
         // this.nativeAudioPlayer = await nativeAudioPlayer.AddComponent(new BS.BanterVideoPlayer());
         // await nativeAudioPlayer.SetParent(this.videoPlayer, false);
@@ -82,14 +86,18 @@ export class NativePlayer extends BasePlayer{
         return true;
     }
     async EnsurePrepared() {
-        await this.WaitFor(this.nativePlayer, "isPrepared", null, async () => await this.nativePlayer.Q([BS.PropertyName.isPrepared]), 500);
+        if(!this.nativePlayer.isPrepared) {   
+            await this.WaitFor(this.nativePlayer, "isPrepared", null, async () => await this.nativePlayer.Q([BS.PropertyName.isPrepared]), 50);
+        }
     }
     async Play(url: string) {
         await this.WaitForPlayer();
         this.nativePlayer.url = url;
         await this.EnsurePrepared();
-        await this.WaitFor(this.nativePlayer, "isPlaying", null, async () => await this.nativePlayer.Q([BS.PropertyName.isPlaying]), 500);
+        await this.WaitFor(this.nativePlayer, "isPlaying", null, async () => await this.nativePlayer.Q([BS.PropertyName.isPlaying]), 50);
         this.dispatchEvent(new CustomEvent("playing", {detail: this.isPlaying}));
+        // await this.nativePlayer.Q([BS.PropertyName.duration, BS.PropertyName.time]);
+        // this.dispatchEvent(new CustomEvent("time", {detail: {time: this.nativePlayer.time, duration: this.nativePlayer.duration}}));
         // console.log("set url: ", url)
         // if(audioUrl) {
         //     // this.nativeAudioPlayer.url = audioUrl;
@@ -100,7 +108,6 @@ export class NativePlayer extends BasePlayer{
         return this.nativePlayer.time;
     }
     async Seek(time: number) {
-        await this.EnsurePrepared();
         await this.WaitForPlayer();
         await this.nativePlayer.Q([BS.PropertyName.duration]);
         this.nativePlayer.time = this.Clamp(time, 0, this.nativePlayer.duration);

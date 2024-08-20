@@ -11,6 +11,7 @@ export class BasePlayer extends VideoEventTarget{
     get time(): number { return 0 }
     get volume(): number { return 0 }
     get duration(): number { return 0 }
+    set duration(value: number) { }
     get isMuted(): boolean { return false }
     get isPlaying(): boolean { return false }
     get isLooping(): boolean { return false }

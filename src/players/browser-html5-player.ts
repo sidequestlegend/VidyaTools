@@ -19,7 +19,7 @@ export class BrowserHTML5Player extends BrowserPlayer{
     }
 
     IsPlaying() {
-        dom.isPlaying = !!(this.videoPlayer && this.videoPlayer.currentTime > 0 && !this.videoPlayer.paused && !this.videoPlayer.ended && this.videoPlayer.readyState > 2);
+        dom.isPlaying = !!(this.videoPlayer && this.videoPlayer.currentTime > 0 && !this.videoPlayer.paused && !this.videoPlayer.ended && this.videoPlayer.readyState > 2 && this.videoPlayer.duration);
         return dom.isPlaying;
     }
 
@@ -65,7 +65,8 @@ export class BrowserHTML5Player extends BrowserPlayer{
     }
     async Stop() {
         await this.SendOrRun("Stop", [], async () => {
-            this.videoPlayer.stop();
+            this.videoPlayer.pause();
+            this.videoPlayer.currentTime = 0;
             this.SendToSpace("playing", this.IsPlaying());
         });
     }

@@ -15,6 +15,9 @@ export class BrowserPlayer extends BasePlayer{
     get duration(): number {
         return this._duration;
     }
+    set duration(value: number) {
+        this._duration = value;
+    }
     get time(): number {
         return this._time;
     }

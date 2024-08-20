@@ -16,6 +16,7 @@ export class VidyaPlayer  extends VideoEventTarget{
     players: BasePlayer[];
     videoContainer: any;
     url: string;
+    playStarted: boolean;
     constructor(videoContainer, isClientSide: boolean = false) {
         super();
         this.videoContainer = videoContainer || (isClientSide ? null : new BS.GameObject("VideoPlayer"));
@@ -99,10 +100,12 @@ export class VidyaPlayer  extends VideoEventTarget{
         await this.SetCurrentPlayer();
         if((window as any).BS) {
             await this.Play(this.url);
-            if(!this.duration) {
+            if(!this.duration && time) {
                 await this.currentPlayer.WaitFor(this, "duration");
             }
-            await this.Seek(time);
+            if(time) {
+                await this.Seek(time);
+            }
             await this.SetVolume(volume);
             if(muted) {
                 this.MuteToggle();
@@ -130,6 +133,10 @@ export class VidyaPlayer  extends VideoEventTarget{
         }
     }
     async Play(url: string) {
+        if(this.playStarted || !url) {
+            return;
+        }
+        this.playStarted = true;
         this.url = url;
         const youtubeVideoId = this.ParseYoutubeUrl(url);
         if (youtubeVideoId) {
@@ -137,8 +144,6 @@ export class VidyaPlayer  extends VideoEventTarget{
                 this.currentPlayer.Play(youtubeVideoId);
             }else{
                 const info: {streamingData: StreamingData, playabilityStatus: PlayabilityStatus} = await BS.BanterScene.getInstance().YtInfo(youtubeVideoId);
-                // const videoUrl = this.GetYoutubeUrlS(info);
-                // if(videoUrl) {
                 const isOk = info.playabilityStatus.status === "OK";
                 if(!isOk && !this.IsYoutubePlayer()) {
                     if(info.playabilityStatus.status === "LOGIN_REQUIRED" && info.playabilityStatus.reason.includes("bot")) {
@@ -147,10 +152,10 @@ export class VidyaPlayer  extends VideoEventTarget{
                     this.dispatchEvent(new CustomEvent("warning", {detail: {type: "YtInfoError", detail: info.playabilityStatus.status + " " + info.playabilityStatus.reason}}));
                     await this.ActivatePlayer(this.YOUTUBE);
                 }else if(isOk){
+                    // trick to set the duration a little earlier.
+                    this.currentPlayer.duration = <any>info.streamingData.formats[0].approxDurationMs/1000;
                     await this.currentPlayer.Play(info.streamingData.formats[0].url);
                 }
-                      // , info.streamingData.formats[0].url
-                // }
             }
         }else{
             if(this.IsYoutubePlayer()) {
@@ -160,40 +165,6 @@ export class VidyaPlayer  extends VideoEventTarget{
             }
             await this.currentPlayer.Play(url);
         }
-    }
-    GetYoutubeUrlS(info: {streamingData: StreamingData}){
-        if(!info.streamingData) {
-            return;
-        }
-        if(!info.streamingData.adaptiveFormats) {
-            return;
-        }
-        if( info.streamingData.adaptiveFormats.length < 2) {
-            return;
-        }
-        const videoByQuality = info.streamingData.adaptiveFormats
-            .filter(a => !a.audioQuality)
-            .reduce((a,b)=>{
-                a[b.quality] = b;
-                return a;
-            }, {});
-        
-        let videoUrl = videoByQuality["tiny"].url;
-        switch(true) {
-            case !!videoByQuality["hd1080"]:
-                videoUrl = videoByQuality["hd1080"].url;
-                break;
-            case !!videoByQuality["hd720"]:
-                videoUrl = videoByQuality["hd720"].url;
-                break;
-            case !!videoByQuality["large"]:
-                videoUrl = videoByQuality["large"].url;
-                break;
-            case !!videoByQuality["medium"]:
-                videoUrl = videoByQuality["medium"].url;
-                break;
-    
-        }
-        return videoUrl
+        this.playStarted = false;
     }
 }
