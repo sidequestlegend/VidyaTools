@@ -8,7 +8,7 @@
             }else{
                 // A sample usage:
 
-                const scene = BS.BanterScene.getInstance();
+                const scene = BS.BanterScene.GetInstance();
                 const videoContainer = new BS.GameObject("VideoContainer");
 
                 scene.On("unity-loaded", async() => {
@@ -80,7 +80,15 @@
                         playing.text = "Playing: " + e.detail;
                     });
 
-                    makeButton("stop", new BS.Vector3(0, 0.6, 0), new BS.Vector4(1,0,0,0), "Stop", ()=>{
+                    const looping = await makeButton("looping", new BS.Vector3(0, 0.8, 0), new BS.Vector4(0.2,1,0.5,0), "Looping: ...", ()=>{
+                        player.LoopToggle();
+                    });
+                    player.On("looping", e => {
+                        looping.text = "Looping: " + e.detail;
+                    });
+
+
+                    makeButton("stop", new BS.Vector3(1.3, 0.6, 0), new BS.Vector4(1,0,0,0), "Stop", ()=>{
                         player.Stop();
                     });
 

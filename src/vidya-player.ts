@@ -25,7 +25,7 @@ export class VidyaPlayer  extends VideoEventTarget{
         this.HTML5 = new BrowserHTML5Player(this.videoContainer, isClientSide);
         this.players = [this.NATIVE, this.YOUTUBE, this.HTML5];
         this.players.forEach(p => {
-            ["time", "playing", "muted", "volume"].forEach(d => p.On(d, e => this.dispatchEvent(new CustomEvent(d, {detail: e.detail}))));
+            ["time", "playing", "muted", "volume", "looping"].forEach(d => p.On(d, e => this.dispatchEvent(new CustomEvent(d, {detail: e.detail}))));
         });
         this.SetupBrowserClient();
     }
@@ -143,7 +143,7 @@ export class VidyaPlayer  extends VideoEventTarget{
             if(this.IsYoutubePlayer()) {
                 this.currentPlayer.Play(youtubeVideoId);
             }else{
-                const info: {streamingData: StreamingData, playabilityStatus: PlayabilityStatus} = await BS.BanterScene.getInstance().YtInfo(youtubeVideoId);
+                const info: {streamingData: StreamingData, playabilityStatus: PlayabilityStatus} = await BS.BanterScene.GetInstance().YtInfo(youtubeVideoId);
                 const isOk = info.playabilityStatus.status === "OK";
                 if(!isOk && !this.IsYoutubePlayer()) {
                     if(info.playabilityStatus.status === "LOGIN_REQUIRED" && info.playabilityStatus.reason.includes("bot")) {

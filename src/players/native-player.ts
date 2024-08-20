@@ -65,7 +65,8 @@ export class NativePlayer extends BasePlayer{
         this.videoPlayer.On("object-update", async () => {
             const muted = this.nativePlayer.isMuted;
             const playing = this.nativePlayer.isPlaying;
-            await this.nativePlayer.Q([BS.PropertyName.isPrepared, BS.PropertyName.isMuted, BS.PropertyName.isPlaying, BS.PropertyName.duration]);
+            const looping = this.nativePlayer.isLooping;
+            await this.nativePlayer.Q([BS.PropertyName.isPrepared, BS.PropertyName.isMuted, BS.PropertyName.isPlaying, BS.PropertyName.isLooping, BS.PropertyName.duration]);
             this.dispatchEvent(new CustomEvent("time", {detail: {time: this.nativePlayer.time, duration: this.nativePlayer.duration}}));
             if(playing != this.nativePlayer.isPlaying) {
                 this.dispatchEvent(new CustomEvent("playing", {detail: this.nativePlayer.isPlaying}));
@@ -73,9 +74,13 @@ export class NativePlayer extends BasePlayer{
             if(muted != this.nativePlayer.isMuted) {
                 this.dispatchEvent(new CustomEvent("muted", {detail: this.nativePlayer.isMuted}));
             }
+            if(looping != this.nativePlayer.isLooping) {
+                this.dispatchEvent(new CustomEvent("looping", {detail: this.nativePlayer.isLooping}));
+            }
         });
         this.dispatchEvent(new CustomEvent("playing", {detail: false}));
         this.dispatchEvent(new CustomEvent("muted", {detail: false}));
+        this.dispatchEvent(new CustomEvent("looping", {detail: false}));
 
         // const nativeAudioPlayer = new BS.GameObject("NativeAudioPlayer");
         // this.nativeAudioPlayer = await nativeAudioPlayer.AddComponent(new BS.BanterVideoPlayer());

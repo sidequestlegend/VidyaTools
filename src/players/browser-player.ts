@@ -46,20 +46,14 @@ export class BrowserPlayer extends BasePlayer{
         this.browserPlayer = await this.browser.AddComponent(new BS.BanterBrowser(url));
         this.dispatchEvent(new CustomEvent("playing", {detail: false}));
         this.dispatchEvent(new CustomEvent("muted", {detail: false}));
-        this.browser.On('browser-message', (e) => {
-            try{
-                const data = JSON.parse(e.detail);
-                if(data.path === "ready") {
-                    this.browserReady = true;
-                }
-            }catch{
-                console.log("could not parse json!", e.detail);
-            }
-        });
+        this.dispatchEvent(new CustomEvent("looping", {detail: false}));
         this.browser.On('browser-message', (e) => {
             try{
                 const data = JSON.parse(e.detail);
                 switch(data.path) {
+                    case "ready":
+                        this.browserReady = true;
+                        break;
                     case "time":
                         this._time = data.data;
                         break;

@@ -106,6 +106,7 @@ export class BrowserYoutubePlayer extends BrowserPlayer{
             // videoId: this.core.getId(decodeURIComponent(this.core.params.youtube)),
             playerVars: {
                 'playsinline': 1,
+                'loop' : 0,
                 'autoplay': 1,
                 'disablekb': 1,
                 'controls': 0,
